@@ -101,6 +101,7 @@ jobs:
           echo "<head><title>Sample HTML</title></head>" >> sample.html
           echo "<body><h1>Hello, GitHub Actions!</h1></body>" >> sample.html
           echo "</html>" >> sample.html
+          mv sample.html data
 
       # Configure Git
       - name: Configure Git
@@ -111,7 +112,7 @@ jobs:
       # Commit the new HTML file
       - name: Commit changes
         run: |
-          git add sample.html
+          git add data/sample.html
           git commit -m "Add generated sample HTML file"
 
       # Push the changes
