@@ -21,24 +21,24 @@ x_test = x_test.reshape(x_test.shape[0], -1) / 255.0
 # Convert to Pandas DataFrame
 df_train = pd.DataFrame(x_train)
 df_train['label'] = y_train
-df_train_sample = df_train.sample(n=5000, random_state=42)  # Take a subset of 5000 rows
-
 df_test = pd.DataFrame(x_test)
 df_test['label'] = y_test
-df_test_sample = df_test.sample(n=5000, random_state=42)  # Take a subset of 5000 rows
+
+# Reduce dataset size for faster execution
+df_train = df_train.sample(frac=0.5, random_state=42)  # Use 50% of data
 
 # Convert to H2O Frame
-hf_train = h2o.H2OFrame(df_train_sample)
-hf_test = h2o.H2OFrame(df_test_sample)
+hf_train = h2o.H2OFrame(df_train)
+hf_test = h2o.H2OFrame(df_test)
 
 # Define response and predictors
 response = 'label'
-predictors = df_train_sample.columns[:-1].tolist()
+predictors = df_train.columns[:-1].tolist()
 hf_train[response] = hf_train[response].asfactor()
 hf_test[response] = hf_test[response].asfactor()
 
-# Run H2O AutoML
-aml = H2OAutoML(max_models=10, seed=42)
+# Run H2O AutoML with reduced model count and runtime
+aml = H2OAutoML(max_models=5, max_runtime_secs=600, seed=42)
 aml.train(x=predictors, y=response, training_frame=hf_train)
 
 # Get AutoML leaderboard and save results
@@ -55,7 +55,7 @@ def objective(trial):
     # Sample hyperparameters
     learning_rate = trial.suggest_float("learn_rate", 0.001, 0.1, log=True)
     max_depth = trial.suggest_int("max_depth", 3, 10)
-    ntrees = trial.suggest_int("ntrees", 50, 500, step=50)
+    ntrees = trial.suggest_int("ntrees", 50, 300, step=50)  # Reduced max trees
     
     # Train model
     model = h2o.estimators.H2OGradientBoostingEstimator(
@@ -69,9 +69,9 @@ def objective(trial):
     
     return accuracy
 
-# Run hyperparameter optimization
+# Run hyperparameter optimization with fewer trials
 study = optuna.create_study(direction='maximize')
-study.optimize(objective, n_trials=20)
+study.optimize(objective, n_trials=10)  # Reduced from 20 to 10
 
 # Save hyperparameter tuning logs
 with open("hyperparameter_tuning_logs.txt", "w") as f:
