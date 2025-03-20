@@ -18,13 +18,42 @@ jobs:
       - name: Install dependencies
         run: |
           #python -m pip install --upgrade pip
-          #pip install tensorflow numpy pandas matplotlib pandas-profiling sweetviz
-          #pip uninstall pandas-profiling ydata-profiling visions numba -y
-          #pip install ydata-profiling visions numba
+          pip install tensorflow numpy pandas matplotlib pandas-profiling sweetviz
+          pip uninstall pandas-profiling ydata-profiling visions numba -y
+          pip install ydata-profiling visions numba
 
       - name: Run pipeline
         run: |
-          #python src/eda_sweetviz.py
+          python src/eda_sweetviz.py
+
+      # save reports
+      - name: Save reports
+        run: |
+          mv fashion_mnist_pandas_profiling.html reports
+          mv fashion_mnist_sweetviz.html reports
+          mv class_distribution.png reports
+          mv correlation_heatmap.png reports
+
+      # Configure Git
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Commit the new reports
+      - name: Commit changes
+        run: |
+          git add reports/fashion_mnist_pandas_profiling.html
+          git add reports/fashion_mnist_sweetviz.html
+          git add reports/class_distribution.png
+          git add reports/correlation_heatmap.png
+          git commit -m "Add generated sweetviz reports"
+
+      # Push the changes
+      - name: Push changes
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: git push origin HEAD:main
   explainability:
     runs-on: ubuntu-latest
 
@@ -39,12 +68,35 @@ jobs:
 
       - name: Install dependencies
         run: |
-          #python -m pip install --upgrade pip
-          #pip install numpy pandas tensorflow lime matplotlib scikit-learn ipython
+          python -m pip install --upgrade pip
+          pip install numpy pandas tensorflow lime matplotlib scikit-learn ipython
 
       - name: Run pipeline
         run: |
-          #python src/explainability_lime.py
+          python src/explainability_lime.py
+
+      # save HTML file to reports
+      - name: Save lime_explanation HTML
+        run: |
+          mv lime_explanation.html reports
+
+      # Configure Git
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Commit the new lime_explanation file
+      - name: Commit changes
+        run: |
+          git add reports/lime_explanation.html
+          git commit -m "Add generated lime_explanation HTML file"
+
+      # Push the changes
+      - name: Push changes
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: git push origin HEAD:main
   automl:
     runs-on: ubuntu-latest
 
@@ -59,12 +111,39 @@ jobs:
 
       - name: Install dependencies
         run: |
-          #python -m pip install --upgrade pip
-          #pip install h2o optuna numpy pandas tensorflow scikit-learn
+          python -m pip install --upgrade pip
+          pip install h2o optuna numpy pandas tensorflow scikit-learn
 
       - name: Run pipeline
         run: |
-          #python src/automl_h2o.py
+          python src/automl_h2o.py
+
+      # save AutoML results
+      - name: Save AutoML results
+        run: |
+          mv automl_results.csv reports
+          mv hyperparameter_tuning_logs.txt reports
+          mv model_justification.txt reports
+
+      # Configure Git
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Commit the new automl_results file
+      - name: Commit changes
+        run: |
+          git add reports/automl_results.csv
+          git add reports/hyperparameter_tuning_logs.txt
+          git add reports/model_justification.txt
+          git commit -m "Add generated automl_results file"
+
+      # Push the changes
+      - name: Push changes
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: git push origin HEAD:main
   performance:
     runs-on: ubuntu-latest
 
@@ -85,38 +164,3 @@ jobs:
       - name: Run pipeline
         run: |
           #python src/performance_psi.py
-  generate-html:
-    runs-on: ubuntu-latest
-
-    steps:
-      # Checkout the repository
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      # Generate a sample HTML file
-      - name: Generate HTML
-        run: |
-          echo "<!DOCTYPE html>" > sample.html
-          echo "<html>" >> sample.html
-          echo "<head><title>Sample HTML</title></head>" >> sample.html
-          echo "<body><h1>Hello, GitHub Actions!</h1></body>" >> sample.html
-          echo "</html>" >> sample.html
-          mv sample.html data
-
-      # Configure Git
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      # Commit the new HTML file
-      - name: Commit changes
-        run: |
-          git add data/sample.html
-          git commit -m "Add generated sample HTML file"
-
-      # Push the changes
-      - name: Push changes
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: git push origin HEAD:main

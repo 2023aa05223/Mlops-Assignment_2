@@ -1,3 +1,4 @@
+import os
 import tensorflow as tf
 import numpy as np
 import pandas as pd
@@ -18,6 +19,10 @@ df['label'] = y_train  # Add target labels
 
 df_sample = df.sample(n=5000, random_state=42)  # Take a subset of 5000 rows
 
+# Create output directory
+output_dir = "reports"
+os.makedirs(output_dir, exist_ok=True)
+
 # Generate Pandas Profiling Report
 profile = ProfileReport(df_sample, title="Fashion MNIST EDA Report", explorative=True)
 profile.to_file("fashion_mnist_pandas_profiling.html")
@@ -33,7 +38,8 @@ plt.xticks(range(10))
 plt.xlabel("Class Label")
 plt.ylabel("Frequency")
 plt.title("Class Distribution in Fashion MNIST")
-plt.show()
+plt.tight_layout()
+plt.savefig("class_distribution.png")
 
 # Check for missing values
 missing_values = df_sample.isnull().sum().sum()
@@ -44,7 +50,8 @@ correlation_matrix = df_sample.corr()
 plt.figure(figsize=(12, 8))
 sns.heatmap(correlation_matrix, cmap='coolwarm', linewidths=0.5)
 plt.title("Feature Correlation Heatmap")
-plt.show()
+plt.tight_layout()
+plt.savefig("correlation_heatmap.png")
 
 print("EDA reports generated: 'fashion_mnist_pandas_profiling.html' and 'fashion_mnist_sweetviz.html'")
 print("Class distribution plot and feature correlation heatmap displayed.")
