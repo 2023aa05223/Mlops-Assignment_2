@@ -21,16 +21,19 @@ x_test = x_test.reshape(x_test.shape[0], -1) / 255.0
 # Convert to Pandas DataFrame
 df_train = pd.DataFrame(x_train)
 df_train['label'] = y_train
+df_train_sample = df_train.sample(n=5000, random_state=42)  # Take a subset of 5000 rows
+
 df_test = pd.DataFrame(x_test)
 df_test['label'] = y_test
+df_test_sample = df_test.sample(n=5000, random_state=42)  # Take a subset of 5000 rows
 
 # Convert to H2O Frame
-hf_train = h2o.H2OFrame(df_train)
-hf_test = h2o.H2OFrame(df_test)
+hf_train = h2o.H2OFrame(df_train_sample)
+hf_test = h2o.H2OFrame(df_test_sample)
 
 # Define response and predictors
 response = 'label'
-predictors = df_train.columns[:-1].tolist()
+predictors = df_train_sample.columns[:-1].tolist()
 hf_train[response] = hf_train[response].asfactor()
 hf_test[response] = hf_test[response].asfactor()
 

@@ -22,6 +22,22 @@ def create_model():
     model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     return model
 
+# Drift Detection using PSI
+def calculate_psi(expected, actual, buckets=10):
+    def get_bucket_values(data, buckets):
+        percentiles = np.linspace(0, 100, buckets + 1)
+        bucket_edges = np.percentile(data, percentiles)
+        return np.histogram(data, bins=bucket_edges)[0] / len(data)
+    
+    expected_dist = get_bucket_values(expected, buckets)
+    actual_dist = get_bucket_values(actual, buckets)
+    psi_values = (expected_dist - actual_dist) * np.log((expected_dist + 1e-8) / (actual_dist + 1e-8))
+    return np.sum(psi_values)
+
+# Compute PSI to detect drift
+psi_value = calculate_psi(y_train, y_test)
+print(f"PSI Value: {psi_value}")
+
 # MLflow Tracking
 mlflow.set_experiment("FashionMNIST_Tracking")
 with mlflow.start_run():
@@ -45,20 +61,5 @@ with mlflow.start_run():
     y_pred = np.argmax(model.predict(x_test), axis=1)
     test_accuracy = accuracy_score(y_test, y_pred)
     mlflow.log_metric("test_accuracy", test_accuracy)
-
-# Drift Detection using PSI
-def calculate_psi(expected, actual, buckets=10):
-    def get_bucket_values(data, buckets):
-        percentiles = np.linspace(0, 100, buckets + 1)
-        bucket_edges = np.percentile(data, percentiles)
-        return np.histogram(data, bins=bucket_edges)[0] / len(data)
     
-    expected_dist = get_bucket_values(expected, buckets)
-    actual_dist = get_bucket_values(actual, buckets)
-    psi_values = (expected_dist - actual_dist) * np.log((expected_dist + 1e-8) / (actual_dist + 1e-8))
-    return np.sum(psi_values)
-
-# Compute PSI to detect drift
-psi_value = calculate_psi(y_train, y_test)
-print(f"PSI Value: {psi_value}")
-mlflow.log_metric("PSI_value", psi_value)
+    mlflow.log_metric("PSI_value", psi_value)

@@ -1,0 +1,121 @@
+name: MLOPS Pipeline CI
+
+on: [push, pull_request]
+
+jobs:
+  sweetviz:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          #python -m pip install --upgrade pip
+          #pip install tensorflow numpy pandas matplotlib pandas-profiling sweetviz
+          #pip uninstall pandas-profiling ydata-profiling visions numba -y
+          #pip install ydata-profiling visions numba
+
+      - name: Run pipeline
+        run: |
+          #python src/eda_sweetviz.py
+  explainability:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          #python -m pip install --upgrade pip
+          #pip install numpy pandas tensorflow lime matplotlib scikit-learn ipython
+
+      - name: Run pipeline
+        run: |
+          #python src/explainability_lime.py
+  automl:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          #python -m pip install --upgrade pip
+          #pip install h2o optuna numpy pandas tensorflow scikit-learn
+
+      - name: Run pipeline
+        run: |
+          #python src/automl_h2o.py
+  performance:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          #python -m pip install --upgrade pip
+          #pip install tensorflow mlflow numpy scikit-learn
+
+      - name: Run pipeline
+        run: |
+          #python src/performance_psi.py
+  generate-html:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Generate a sample HTML file
+      - name: Generate HTML
+        run: |
+          echo "<!DOCTYPE html>" > sample.html
+          echo "<html>" >> sample.html
+          echo "<head><title>Sample HTML</title></head>" >> sample.html
+          echo "<body><h1>Hello, GitHub Actions!</h1></body>" >> sample.html
+          echo "</html>" >> sample.html
+
+      # Configure Git
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Commit the new HTML file
+      - name: Commit changes
+        run: |
+          git add sample.html
+          git commit -m "Add generated sample HTML file"
+
+      # Push the changes
+      - name: Push changes
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: git push origin HEAD:main
