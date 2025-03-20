@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from pandas_profiling import ProfileReport
 import sweetviz as sv
+from sklearn.decomposition import PCA
 
 # Load Fashion MNIST dataset
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.fashion_mnist.load_data()
@@ -14,17 +15,19 @@ import sweetviz as sv
 num_samples = x_train.shape[0]
 x_train_flattened = x_train.reshape(num_samples, -1)  # Flatten images
 
-df = pd.DataFrame(x_train_flattened)
-df['label'] = y_train  # Add target labels
+# Apply PCA to reduce dimensions
+pca = PCA(n_components=100)  # Keep only 100 components
+x_train_reduced = pca.fit_transform(x_train_flattened)
 
-df_sample = df.sample(n=5000, random_state=42)  # Take a subset of 5000 rows
+df_reduced = pd.DataFrame(x_train_reduced)
+df_reduced['label'] = y_train  # Add target labels
 
 # Create output directory
 output_dir = "reports"
 os.makedirs(output_dir, exist_ok=True)
 
-# Generate Pandas Profiling Report
-profile = ProfileReport(df_sample, title="Fashion MNIST EDA Report", explorative=True)
+# Generate Pandas Profiling Report (minimal mode for speed)
+profile = ProfileReport(df_sample, title="Fashion MNIST EDA Report", minimal=True)
 profile.to_file("fashion_mnist_pandas_profiling.html")
 
 # Generate Sweetviz Report
@@ -45,7 +48,7 @@ plt.savefig("class_distribution.png")
 missing_values = df_sample.isnull().sum().sum()
 print(f"Total Missing Values: {missing_values}")
 
-# Feature Correlations
+# Feature Correlations on Sample
 correlation_matrix = df_sample.corr()
 plt.figure(figsize=(12, 8))
 sns.heatmap(correlation_matrix, cmap='coolwarm', linewidths=0.5)
