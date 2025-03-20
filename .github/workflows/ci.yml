@@ -118,4 +118,4 @@ jobs:
       - name: Push changes
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/2023aa05223/Mlops-Assignment_2.git HEAD:main
+        run: git push origin HEAD:main
