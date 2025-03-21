@@ -26,6 +26,9 @@ df_reduced['label'] = y_train  # Add target labels
 output_dir = "reports"
 os.makedirs(output_dir, exist_ok=True)
 
+# Reduce sample size for faster execution
+df_sample = df_reduced.sample(n=5000, random_state=42)
+
 # Generate Pandas Profiling Report (minimal mode for speed)
 profile = ProfileReport(df_sample, title="Fashion MNIST EDA Report", minimal=True)
 profile.to_file("fashion_mnist_pandas_profiling.html")
