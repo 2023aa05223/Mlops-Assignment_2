@@ -18,9 +18,10 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install tensorflow numpy pandas matplotlib pandas-profiling sweetviz scikit-learn
-          pip uninstall pandas-profiling ydata-profiling visions numba -y
-          pip install ydata-profiling visions numba
+          #pip install tensorflow numpy pandas matplotlib pandas-profiling sweetviz scikit-learn
+          #pip uninstall pandas-profiling ydata-profiling visions numba -y
+          #pip install ydata-profiling visions numba
+          pip install --upgrade numpy==1.23.5 pandas matplotlib seaborn tensorflow scikit-learn ydata-profiling sweetviz
 
       - name: Run pipeline
         run: |
@@ -35,6 +36,7 @@ jobs:
       # Commit the new reports/files
       - name: Commit changes
         run: |
+          git pull
           git add --all
           git commit -m "Add generated sweetviz reports/files"
 
@@ -73,6 +75,7 @@ jobs:
       # Commit the new lime_explanation files
       - name: Commit changes
         run: |
+          git pull
           git add --all
           git commit -m "Add generated lime_explanation files"
 
@@ -117,6 +120,7 @@ jobs:
       # Commit the new automl_result files
       - name: Commit changes
         run: |
+          git pull
           git add --all
           git commit -m "Add generated automl_result files"
 
@@ -155,6 +159,7 @@ jobs:
       # Commit the new mlrun files
       - name: Commit changes
         run: |
+          git pull
           git add --all
           git commit -m "Add generated mlrun files"
 
