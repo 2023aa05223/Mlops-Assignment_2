@@ -1,0 +1,15 @@
+artifact_uri: file:///home/runner/work/Mlops-Assignment_2/Mlops-Assignment_2/mlruns/487095959390799754/a204bea3079e4b62a0bf8832fbc7342a/artifacts
+end_time: 1742519512687
+entry_point_name: ''
+experiment_id: '487095959390799754'
+lifecycle_stage: active
+run_id: a204bea3079e4b62a0bf8832fbc7342a
+run_name: adventurous-shrew-44
+run_uuid: a204bea3079e4b62a0bf8832fbc7342a
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1742519404702
+status: 3
+tags: []
+user_id: runner

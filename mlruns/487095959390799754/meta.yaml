@@ -1,0 +1,6 @@
+artifact_location: file:///home/runner/work/Mlops-Assignment_2/Mlops-Assignment_2/mlruns/487095959390799754
+creation_time: 1742519404660
+experiment_id: '487095959390799754'
+last_update_time: 1742519404660
+lifecycle_stage: active
+name: FashionMNIST_Tracking
