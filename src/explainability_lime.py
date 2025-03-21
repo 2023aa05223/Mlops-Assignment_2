@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -41,9 +42,13 @@ instance = x_test_scaled[0].reshape(1, -1)
 prediction = model.predict(instance)
 exp = explainer.explain_instance(instance.flatten(), model.predict, num_features=10)
 
+# Create output directory
+output_dir = "reports"
+os.makedirs(output_dir, exist_ok=True)
+
 # Visualizing LIME explanation
 exp.show_in_notebook()
-html_path = "lime_explanation.html"
+html_path = output_dir+"/lime_explanation.html"
 exp.save_to_file(html_path)
 
 # Print the HTML content to GitHub Actions logs
@@ -56,4 +61,4 @@ with open(html_path, "r", encoding="utf-8") as file:
 # - Explainability via LIME helps identify important pixels influencing predictions.
 # - Insights can refine preprocessing by removing irrelevant features or focusing on key regions.
 
-plt.show()
+plt.savefig(f"{output_dir}/explanation.png")

@@ -1,3 +1,4 @@
+import os
 import h2o
 import optuna
 import numpy as np
@@ -41,9 +42,14 @@ hf_test[response] = hf_test[response].asfactor()
 aml = H2OAutoML(max_models=5, max_runtime_secs=600, seed=42)
 aml.train(x=predictors, y=response, training_frame=hf_train)
 
+# Create output directory
+output_dir = "reports"
+os.makedirs(output_dir, exist_ok=True)
+file_path = output_dir+"/automl_results.csv"
+
 # Get AutoML leaderboard and save results
 aml_leaderboard = aml.leaderboard.as_data_frame()
-aml_leaderboard.to_csv("automl_results.csv", index=False)
+aml_leaderboard.to_csv(file_path, index=False)
 print("AutoML Model Comparison:")
 print(aml_leaderboard)
 

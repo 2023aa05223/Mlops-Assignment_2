@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from pandas_profiling import ProfileReport
+from ydata_profiling import ProfileReport
 import sweetviz as sv
 from sklearn.decomposition import PCA
 
@@ -26,16 +26,13 @@ df_reduced['label'] = y_train  # Add target labels
 output_dir = "reports"
 os.makedirs(output_dir, exist_ok=True)
 
-# Reduce sample size for faster execution
-df_sample = df_reduced.sample(n=5000, random_state=42)
-
 # Generate Pandas Profiling Report (minimal mode for speed)
-profile = ProfileReport(df_sample, title="Fashion MNIST EDA Report", minimal=True)
-profile.to_file("fashion_mnist_pandas_profiling.html")
+profile = ProfileReport(df_reduced, title="Fashion MNIST EDA Report", minimal=True)
+profile.to_file(f"{output_dir}/fashion_mnist_profiling.html")
 
 # Generate Sweetviz Report
-report = sv.analyze(df_sample)
-report.show_html("fashion_mnist_sweetviz.html")
+report = sv.analyze(df_reduced)
+report.show_html(f"{output_dir}/fashion_mnist_sweetviz.html")
 
 # Visualizing Class Distribution
 plt.figure(figsize=(10,5))
@@ -45,19 +42,19 @@ plt.xlabel("Class Label")
 plt.ylabel("Frequency")
 plt.title("Class Distribution in Fashion MNIST")
 plt.tight_layout()
-plt.savefig("class_distribution.png")
+plt.savefig(f"{output_dir}/class_distribution.png")
 
 # Check for missing values
-missing_values = df_sample.isnull().sum().sum()
+missing_values = df_reduced.isnull().sum().sum()
 print(f"Total Missing Values: {missing_values}")
 
-# Feature Correlations on Sample
-correlation_matrix = df_sample.corr()
+# Feature Correlations on Full PCA Dataset
+correlation_matrix = df_reduced.corr()
 plt.figure(figsize=(12, 8))
 sns.heatmap(correlation_matrix, cmap='coolwarm', linewidths=0.5)
 plt.title("Feature Correlation Heatmap")
 plt.tight_layout()
-plt.savefig("correlation_heatmap.png")
+plt.savefig(f"{output_dir}/correlation_heatmap.png")
 
-print("EDA reports generated: 'fashion_mnist_pandas_profiling.html' and 'fashion_mnist_sweetviz.html'")
+print("EDA reports generated: 'fashion_mnist_profiling.html' and 'fashion_mnist_sweetviz.html'")
 print("Class distribution plot and feature correlation heatmap displayed.")

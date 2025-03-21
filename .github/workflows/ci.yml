@@ -17,7 +17,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          #python -m pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install tensorflow numpy pandas matplotlib pandas-profiling sweetviz scikit-learn
           pip uninstall pandas-profiling ydata-profiling visions numba -y
           pip install ydata-profiling visions numba
@@ -26,28 +26,17 @@ jobs:
         run: |
           python src/eda_sweetviz.py
 
-      # save reports
-      - name: Save reports
-        run: |
-          mv fashion_mnist_pandas_profiling.html reports
-          mv fashion_mnist_sweetviz.html reports
-          mv class_distribution.png reports
-          mv correlation_heatmap.png reports
-
       # Configure Git
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # Commit the new reports
+      # Commit the new reports/files
       - name: Commit changes
         run: |
-          git add reports/fashion_mnist_pandas_profiling.html
-          git add reports/fashion_mnist_sweetviz.html
-          git add reports/class_distribution.png
-          git add reports/correlation_heatmap.png
-          git commit -m "Add generated sweetviz reports"
+          git add --all
+          git commit -m "Add generated sweetviz reports/files"
 
       # Push the changes
       - name: Push changes
@@ -75,22 +64,17 @@ jobs:
         run: |
           python src/explainability_lime.py
 
-      # save HTML file to reports
-      - name: Save lime_explanation HTML
-        run: |
-          mv lime_explanation.html reports
-
       # Configure Git
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # Commit the new lime_explanation file
+      # Commit the new lime_explanation files
       - name: Commit changes
         run: |
-          git add reports/lime_explanation.html
-          git commit -m "Add generated lime_explanation HTML file"
+          git add --all
+          git commit -m "Add generated lime_explanation files"
 
       # Push the changes
       - name: Push changes
@@ -121,7 +105,6 @@ jobs:
       # save AutoML results
       - name: Save AutoML results
         run: |
-          mv automl_results.csv reports
           mv hyperparameter_tuning_logs.txt reports
           mv model_justification.txt reports
 
@@ -131,13 +114,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # Commit the new automl_results file
+      # Commit the new automl_result files
       - name: Commit changes
         run: |
-          git add reports/automl_results.csv
-          git add reports/hyperparameter_tuning_logs.txt
-          git add reports/model_justification.txt
-          git commit -m "Add generated automl_results file"
+          git add --all
+          git commit -m "Add generated automl_result files"
 
       # Push the changes
       - name: Push changes
@@ -158,9 +139,27 @@ jobs:
 
       - name: Install dependencies
         run: |
-          #python -m pip install --upgrade pip
-          #pip install tensorflow mlflow numpy scikit-learn
+          python -m pip install --upgrade pip
+          pip install tensorflow mlflow numpy scikit-learn
 
       - name: Run pipeline
         run: |
-          #python src/performance_psi.py
+          python src/performance_psi.py
+
+      # Configure Git
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Commit the new mlrun files
+      - name: Commit changes
+        run: |
+          git add --all
+          git commit -m "Add generated mlrun files"
+
+      # Push the changes
+      - name: Push changes
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: git push origin HEAD:main
