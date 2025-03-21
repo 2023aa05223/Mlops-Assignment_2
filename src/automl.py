@@ -65,7 +65,7 @@ best_model = aml.leader
 print(f"\nBest model: {best_model}")
 
 # Save the best model from H2O
-model_path = h2o.save_model(model=best_model, path="./models", force=True)
+model_path = h2o.save_model(model=best_model, path="models", force=True)
 print(f"H2O model saved to: {model_path}")
 
 # Extract the best model type for sklearn implementation
@@ -87,7 +87,7 @@ def objective(trial):
     balance_classes = trial.suggest_categorical("balance_classes", [True, False])
     
     # Clone best model and apply new hyperparameters
-    model = best_model.clone()
+    model = best_model
     model.set_params(
         learn_rate=learning_rate, max_depth=max_depth, ntrees=ntrees,
         min_rows=min_rows, sample_rate=sample_rate, col_sample_rate=col_sample_rate,
