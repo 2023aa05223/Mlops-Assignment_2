@@ -51,14 +51,11 @@ exp.show_in_notebook()
 html_path = output_dir+"/lime_explanation.html"
 exp.save_to_file(html_path)
 
-# Print the HTML content to GitHub Actions logs
-with open(html_path, "r", encoding="utf-8") as file:
-    print(file.read())
-
 # Justification:
 # - Normalization ensures pixel values are within a consistent range.
 # - Standardization improves convergence and performance of the model.
 # - Explainability via LIME helps identify important pixels influencing predictions.
 # - Insights can refine preprocessing by removing irrelevant features or focusing on key regions.
-
-plt.savefig(f"{output_dir}/explanation.png")
+# - LIME highlights specific pixel regions that contribute most to classification, helping in understanding model decision-making.
+# - The most relevant pixels tend to correspond to the edges and textures of the clothing items, which are crucial for distinguishing categories.
+# - Based on these insights, future improvements could include feature selection focusing on high-impact pixels or using convolutional layers instead of fully connected layers for better spatial awareness.
