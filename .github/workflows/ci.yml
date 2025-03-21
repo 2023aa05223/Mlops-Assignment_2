@@ -25,7 +25,7 @@ jobs:
 
       - name: Run pipeline
         run: |
-          python src/eda_sweetviz.py
+          python src/eda.py
 
       # Configure Git
       - name: Configure Git
@@ -64,7 +64,7 @@ jobs:
 
       - name: Run pipeline
         run: |
-          python src/explainability_lime.py
+          python src/explainability.py
 
       # Configure Git
       - name: Configure Git
@@ -103,7 +103,7 @@ jobs:
 
       - name: Run pipeline
         run: |
-          python src/automl_h2o.py
+          python src/automl.py
 
       # save AutoML results
       - name: Save AutoML results
@@ -148,7 +148,7 @@ jobs:
 
       - name: Run pipeline
         run: |
-          python src/performance_psi.py
+          python src/performance.py
 
       # Configure Git
       - name: Configure Git
