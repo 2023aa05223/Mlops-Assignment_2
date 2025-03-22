@@ -274,7 +274,13 @@ def justify_model_selection(best_model, study, psi_value, comparison_results):
 
     # Best model details
     best_model_id = best_model.model_id
-    best_model_accuracy = max([result['accuracy'] for result in comparison_results if result['model_id'] == best_model_id])
+    filtered_results = [result for result in comparison_results if result['model_id'] == best_model_id]
+    
+    if not filtered_results:
+        logger.error("No results found for the best model ID: %s", best_model_id)
+        return
+    
+    best_model_accuracy = max(result['accuracy'] for result in filtered_results)
     logger.info("Chosen Model ID: %s", best_model_id)
     logger.info("Chosen Model Accuracy: %.4f", best_model_accuracy)
 
