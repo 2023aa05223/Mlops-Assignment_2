@@ -89,7 +89,7 @@ def objective(trial):
     sample_rate = trial.suggest_float("sample_rate", 0.5, 1.0)
     col_sample_rate = trial.suggest_float("col_sample_rate", 0.5, 1.0)
     stopping_rounds = trial.suggest_int("stopping_rounds", 5, 20)
-    
+
     # Clone best model and apply new hyperparameters
     model = best_model
     model.set_params(
@@ -97,10 +97,10 @@ def objective(trial):
         min_rows=min_rows, sample_rate=sample_rate, col_sample_rate=col_sample_rate,
         stopping_rounds=stopping_rounds
     )
-    
+
     # Train model
     model.train(x=predictors, y=response, training_frame=hf_train)
-    
+
     # Predict and evaluate
     preds = model.predict(hf_test).as_data_frame()['predict'].astype(int)
     accuracy = accuracy_score(y_test, preds)
