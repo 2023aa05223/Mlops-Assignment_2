@@ -1,3 +1,3 @@
-Trial 0: {'learn_rate': 0.020990619405216297, 'max_depth': 6, 'ntrees': 50, 'min_rows': 6, 'sample_rate': 0.6527563158680445, 'col_sample_rate': 0.8379962062118749, 'stopping_rounds': 6}, Accuracy: 0.835
-Trial 1: {'learn_rate': 0.022657099154479957, 'max_depth': 3, 'ntrees': 50, 'min_rows': 6, 'sample_rate': 0.643165373256704, 'col_sample_rate': 0.7919924565669756, 'stopping_rounds': 8}, Accuracy: 0.7876666666666666
-Trial 2: {'learn_rate': 0.027200202462324137, 'max_depth': 5, 'ntrees': 50, 'min_rows': 2, 'sample_rate': 0.6548153089971256, 'col_sample_rate': 0.6036987572881891, 'stopping_rounds': 10}, Accuracy: 0.8286666666666667
+Trial 0: {'learn_rate': 0.02552923173130439, 'max_depth': 3, 'ntrees': 50, 'min_rows': 2, 'sample_rate': 0.796030508749688, 'col_sample_rate': 0.7541347834223354, 'stopping_rounds': 6}, Accuracy: 0.7876666666666666
+Trial 1: {'learn_rate': 0.09875398428934946, 'max_depth': 4, 'ntrees': 150, 'min_rows': 3, 'sample_rate': 0.6470038831819699, 'col_sample_rate': 0.7871310488382892, 'stopping_rounds': 6}, Accuracy: 0.8693333333333333
+Trial 2: {'learn_rate': 0.01561946430563268, 'max_depth': 4, 'ntrees': 50, 'min_rows': 1, 'sample_rate': 0.7095286742354848, 'col_sample_rate': 0.6373959202307078, 'stopping_rounds': 9}, Accuracy: 0.81
