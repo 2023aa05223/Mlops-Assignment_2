@@ -15,15 +15,16 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 
 # Constants
 OUTPUT_DIR = "reports"
+EDA_DIR = os.path.join(OUTPUT_DIR, "eda_reports")  # Directory for EDA outputs
 PCA_COMPONENTS = 100
 CLASS_LABELS = [
     "T-shirt/top", "Trouser", "Pullover", "Dress", "Coat",
     "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"
 ]
-PANDAS_PROFILING_FILE = os.path.join(OUTPUT_DIR, "fashion_mnist_profiling.html")
-SWEETVIZ_FILE = os.path.join(OUTPUT_DIR, "fashion_mnist_sweetviz.html")
-CLASS_DIST_FILE = os.path.join(OUTPUT_DIR, "class_distribution.png")
-HEATMAP_FILE = os.path.join(OUTPUT_DIR, "correlation_heatmap.png")
+PANDAS_PROFILING_FILE = os.path.join(EDA_DIR, "fashion_mnist_profiling.html")
+SWEETVIZ_FILE = os.path.join(EDA_DIR, "fashion_mnist_sweetviz.html")
+CLASS_DIST_FILE = os.path.join(EDA_DIR, "class_distribution.png")
+HEATMAP_FILE = os.path.join(EDA_DIR, "correlation_heatmap.png")
 
 
 def create_output_directory(directory: str) -> None:
@@ -162,7 +163,7 @@ def main() -> None:
     df_reduced["label"] = y_train
 
     # Create output directory
-    create_output_directory(OUTPUT_DIR)
+    create_output_directory(EDA_DIR)
 
     # Generate Pandas Profiling Report
     logging.info("Generating Pandas Profiling Report...")

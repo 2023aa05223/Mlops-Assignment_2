@@ -22,13 +22,14 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 # Constants
 EPOCHS = 5
 BATCH_SIZE = 32
-OUTPUT_DIR = "explainability_reports"
+OUTPUT_DIR = "reports"
+EXPLAINABILITY_DIR = os.path.join(OUTPUT_DIR, "explainability_reports")  # Directory for Explainability outputs
 CLASS_NAMES = [
     "T-shirt/top", "Trouser", "Pullover", "Dress", "Coat",
     "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"
 ]
-FEATURE_IMPORTANCE_FILE = os.path.join(OUTPUT_DIR, "feature_importance.png")
-PERMUTATION_IMPORTANCE_FILE = os.path.join(OUTPUT_DIR, "permutation_importance.png")
+FEATURE_IMPORTANCE_FILE = os.path.join(EXPLAINABILITY_DIR, "feature_importance.png")
+PERMUTATION_IMPORTANCE_FILE = os.path.join(EXPLAINABILITY_DIR, "permutation_importance.png")
 
 def load_and_preprocess_data():
     """
@@ -209,7 +210,7 @@ def main():
     exp = explain_instance_with_lime(explainer, instance, model)
 
     # Save explanation
-    save_explanation(exp, OUTPUT_DIR)
+    save_explanation(exp, EXPLAINABILITY_DIR)
 
     # Load dataset (example: using a synthetic dataset for demonstration)
     logging.info("Loading dataset...")
@@ -229,7 +230,7 @@ def main():
     model.fit(X_train, y_train)
 
     # Create output directory
-    create_output_directory(OUTPUT_DIR)
+    create_output_directory(EXPLAINABILITY_DIR)
 
     # Plot feature importance
     logging.info("Generating feature importance plot...")
