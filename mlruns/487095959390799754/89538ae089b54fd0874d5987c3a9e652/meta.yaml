@@ -1,0 +1,15 @@
+artifact_uri: file:///home/runner/work/Mlops-Assignment_2/Mlops-Assignment_2/mlruns/487095959390799754/89538ae089b54fd0874d5987c3a9e652/artifacts
+end_time: 1742661541076
+entry_point_name: ''
+experiment_id: '487095959390799754'
+lifecycle_stage: active
+run_id: 89538ae089b54fd0874d5987c3a9e652
+run_name: '20250322_163900'
+run_uuid: 89538ae089b54fd0874d5987c3a9e652
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1742661541056
+status: 3
+tags: []
+user_id: runner

@@ -1,0 +1,1 @@
+The chosen model (ID: XGBoost_model_python_1742659407107_7) was selected based on its superior accuracy and F1-Score, compared to other models in the AutoML leaderboard. The hyperparameters were fine-tuned using Optuna, achieving an accuracy of 0.8497. The PSI value of 3.3692 indicates that the model is robust to data drift, ensuring reliable performance.
