@@ -37089,25 +37089,25 @@
 /***/ })
 /******/ ]);
 //# sourceMappingURL=bundle.js.map </script></head><body>
-        <div class="lime top_div" id="top_divAYEGUJYQS0KSY7J"></div>
+        <div class="lime top_div" id="top_divOHKSER8DAD8GRTL"></div>
         
         <script>
-        var top_div = d3.select('#top_divAYEGUJYQS0KSY7J').classed('lime top_div', true);
+        var top_div = d3.select('#top_divOHKSER8DAD8GRTL').classed('lime top_div', true);
         
             var pp_div = top_div.append('div')
                                 .classed('lime predict_proba', true);
             var pp_svg = pp_div.append('svg').style('width', '100%');
-            var pp = new lime.PredictProba(pp_svg, ["T-shirt/top", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"], [3.3405478916392894e-06, 1.8014245029007725e-07, 1.2480644500101334e-06, 1.6842373042891268e-06, 5.249616515357047e-05, 0.038311347365379333, 2.3842387236072682e-05, 0.14034663140773773, 0.00017460781964473426, 0.8210846781730652]);
+            var pp = new lime.PredictProba(pp_svg, ["T-shirt/top", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"], [3.983072760505024e-10, 2.6330623792425456e-10, 3.855892113848597e-13, 1.5931295171967008e-10, 2.65726551873513e-09, 4.013970465166494e-05, 2.119450665319378e-12, 0.00046752026537433267, 9.149974111721804e-10, 0.999492347240448]);
             
         
         var exp_div;
             var exp = new lime.Explanation(["T-shirt/top", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"]);
         
                 exp_div = top_div.append('div').classed('lime explanation', true);
-                exp.show([["pixel_27 <= -0.01", -0.25773467869555716], ["pixel_1 <= -0.02", 0.10400791090641695], ["pixel_24 <= -0.07", 0.07127081683504158], ["pixel_616 <= -0.22", -0.06999280729653122], ["pixel_28 <= -0.01", 0.06348076268866629], ["pixel_112 <= -0.04", 0.06266747765366816], ["pixel_26 <= -0.03", -0.06251849602719355], ["pixel_588 <= -0.25", -0.05782023751197273], ["pixel_56 <= -0.02", 0.030309721508517844], ["pixel_756 <= -0.03", -0.015481511804870072]], 1, exp_div);
+                exp.show([["pixel_27 <= -0.01", -0.07934124865071177], ["pixel_29 <= -0.02", -0.03657977251444734], ["pixel_54 <= -0.06", -0.028985547735695835], ["pixel_728 <= -0.06", 0.014494346127784845], ["pixel_4 <= -0.06", -0.01392887634261801], ["pixel_22 <= -0.11", -0.013797060999026478], ["pixel_57 <= -0.03", 0.012621183501786972], ["pixel_169 <= -0.11", -0.009288774358276441], ["pixel_55 <= -0.03", -0.009051627617471952], ["pixel_86 <= -0.07", -0.006701221954374002]], 1, exp_div);
                 
         var raw_div = top_div.append('div');
-            exp.show_raw_tabular([["pixel_27", "-0.01", -0.25773467869555716], ["pixel_1", "-0.02", 0.10400791090641695], ["pixel_24", "-0.07", 0.07127081683504158], ["pixel_616", "-0.22", -0.06999280729653122], ["pixel_28", "-0.01", 0.06348076268866629], ["pixel_112", "-0.04", 0.06266747765366816], ["pixel_26", "-0.03", -0.06251849602719355], ["pixel_588", "-0.25", -0.05782023751197273], ["pixel_56", "-0.02", 0.030309721508517844], ["pixel_756", "-0.03", -0.015481511804870072]], 1, raw_div);
+            exp.show_raw_tabular([["pixel_27", "-0.01", -0.07934124865071177], ["pixel_29", "-0.02", -0.03657977251444734], ["pixel_54", "-0.06", -0.028985547735695835], ["pixel_728", "-0.06", 0.014494346127784845], ["pixel_4", "-0.06", -0.01392887634261801], ["pixel_22", "-0.11", -0.013797060999026478], ["pixel_57", "-0.03", 0.012621183501786972], ["pixel_169", "-0.11", -0.009288774358276441], ["pixel_55", "-0.03", -0.009051627617471952], ["pixel_86", "-0.07", -0.006701221954374002]], 1, raw_div);
         
         </script>
         </body></html>
