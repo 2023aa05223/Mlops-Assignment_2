@@ -10,7 +10,6 @@ import tensorflow as tf
 import mlflow
 import mlflow.tensorflow
 from h2o.automl import H2OAutoML
-from tensorflow.keras.datasets import fashion_mnist
 from sklearn.metrics import accuracy_score
 from mlflow.models.signature import infer_signature
 import time
@@ -21,24 +20,18 @@ MODELS_DIR = "models"
 PSI_THRESHOLD = 0.1
 H2O_MAX_MODELS = 5
 H2O_MAX_RUNTIME_SECS = 600
-OPTUNA_TRIALS = 3  # Reduce the number of trials for faster execution
+OPTUNA_TRIALS = 3
 
 # Optuna Hyperparameter Ranges
-OPTUNA_LEARNING_RATE_MIN = 0.01
-OPTUNA_LEARNING_RATE_MAX = 0.1
-OPTUNA_MAX_DEPTH_MIN = 3
-OPTUNA_MAX_DEPTH_MAX = 6
-OPTUNA_NTREES_MIN = 50
-OPTUNA_NTREES_MAX = 150
-OPTUNA_NTREES_STEP = 50
-OPTUNA_MIN_ROWS_MIN = 1
-OPTUNA_MIN_ROWS_MAX = 10
-OPTUNA_SAMPLE_RATE_MIN = 0.5
-OPTUNA_SAMPLE_RATE_MAX = 1.0
-OPTUNA_COL_SAMPLE_RATE_MIN = 0.5
-OPTUNA_COL_SAMPLE_RATE_MAX = 1.0
-OPTUNA_STOPPING_ROUNDS_MIN = 5
-OPTUNA_STOPPING_ROUNDS_MAX = 10
+OPTUNA_PARAMS = {
+    "learn_rate": (0.01, 0.1),
+    "max_depth": (3, 6),
+    "ntrees": (50, 150, 50),
+    "min_rows": (1, 10),
+    "sample_rate": (0.5, 1.0),
+    "col_sample_rate": (0.5, 1.0),
+    "stopping_rounds": (5, 10),
+}
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -58,12 +51,7 @@ def load_and_preprocess_data():
     sample_indices_train = np.random.choice(len(x_train), size=int(len(x_train) * 0.3), replace=False)
     sample_indices_test = np.random.choice(len(x_test), size=int(len(x_test) * 0.3), replace=False)
 
-    x_train = x_train[sample_indices_train]
-    y_train = y_train[sample_indices_train]
-    x_test = x_test[sample_indices_test]
-    y_test = y_test[sample_indices_test]
-
-    return x_train, y_train, x_test, y_test
+    return x_train[sample_indices_train], y_train[sample_indices_train], x_test[sample_indices_test], y_test[sample_indices_test]
 
 def convert_to_h2o_frame(x_train, y_train, x_test, y_test):
     """Convert data to H2O Frames."""
@@ -113,9 +101,7 @@ def save_model_as_pickle(model, output_dir):
         logger.error("Failed to save model as pickle: %s", e)
 
 def calculate_psi(expected, actual, buckets=10):
-    """
-    Calculate Population Stability Index (PSI) to detect data drift.
-    """
+    """Calculate Population Stability Index (PSI) to detect data drift."""
     def get_bucket_values(data, buckets):
         percentiles = np.linspace(0, 100, buckets + 1)
         bucket_edges = np.percentile(data, percentiles)
@@ -131,7 +117,7 @@ def detect_and_handle_drift(hf_train, hf_test, predictors, response, y_train, y_
     psi_value = calculate_psi(y_train, y_test)
     logger.info("PSI Value: %f", psi_value)
 
-    if psi_value > PSI_THRESHOLD:
+    if (psi_value > PSI_THRESHOLD):
         logger.warning("Drift detected. Retraining the model...")
         aml_retrain = H2OAutoML(max_models=H2O_MAX_MODELS, max_runtime_secs=H2O_MAX_RUNTIME_SECS, seed=42)
         aml_retrain.train(x=predictors, y=response, training_frame=hf_train)
@@ -143,23 +129,21 @@ def detect_and_handle_drift(hf_train, hf_test, predictors, response, y_train, y_
 
 def run_optuna_tuning(best_model, hf_train, hf_test, predictors, response, y_test):
     """Run Optuna hyperparameter tuning and update the best model."""
-    start_time = time.time()  # Start timer
+    start_time = time.time()
 
     def objective(trial):
-        learning_rate = trial.suggest_float("learn_rate", OPTUNA_LEARNING_RATE_MIN, OPTUNA_LEARNING_RATE_MAX, log=True)
-        max_depth = trial.suggest_int("max_depth", OPTUNA_MAX_DEPTH_MIN, OPTUNA_MAX_DEPTH_MAX)
-        ntrees = trial.suggest_int("ntrees", OPTUNA_NTREES_MIN, OPTUNA_NTREES_MAX, step=OPTUNA_NTREES_STEP)
-        min_rows = trial.suggest_int("min_rows", OPTUNA_MIN_ROWS_MIN, OPTUNA_MIN_ROWS_MAX)
-        sample_rate = trial.suggest_float("sample_rate", OPTUNA_SAMPLE_RATE_MIN, OPTUNA_SAMPLE_RATE_MAX)
-        col_sample_rate = trial.suggest_float("col_sample_rate", OPTUNA_COL_SAMPLE_RATE_MIN, OPTUNA_COL_SAMPLE_RATE_MAX)
-        stopping_rounds = trial.suggest_int("stopping_rounds", OPTUNA_STOPPING_ROUNDS_MIN, OPTUNA_STOPPING_ROUNDS_MAX)
+        params = {
+            "learn_rate": trial.suggest_float("learn_rate", *OPTUNA_PARAMS["learn_rate"], log=True),
+            "max_depth": trial.suggest_int("max_depth", *OPTUNA_PARAMS["max_depth"]),
+            "ntrees": trial.suggest_int("ntrees", *OPTUNA_PARAMS["ntrees"]),
+            "min_rows": trial.suggest_int("min_rows", *OPTUNA_PARAMS["min_rows"]),
+            "sample_rate": trial.suggest_float("sample_rate", *OPTUNA_PARAMS["sample_rate"]),
+            "col_sample_rate": trial.suggest_float("col_sample_rate", *OPTUNA_PARAMS["col_sample_rate"]),
+            "stopping_rounds": trial.suggest_int("stopping_rounds", *OPTUNA_PARAMS["stopping_rounds"]),
+        }
 
         model = best_model
-        model.set_params(
-            learn_rate=learning_rate, max_depth=max_depth, ntrees=ntrees,
-            min_rows=min_rows, sample_rate=sample_rate, col_sample_rate=col_sample_rate,
-            stopping_rounds=stopping_rounds
-        )
+        model.set_params(**params)
         model.train(x=predictors, y=response, training_frame=hf_train)
         preds = model.predict(hf_test).as_data_frame()['predict'].astype(int)
         return accuracy_score(y_test, preds)
@@ -167,23 +151,11 @@ def run_optuna_tuning(best_model, hf_train, hf_test, predictors, response, y_tes
     study = optuna.create_study(direction='maximize')
     study.optimize(objective, n_trials=OPTUNA_TRIALS, n_jobs=2)
 
-    end_time = time.time()  # End timer
-    logger.info("Optuna tuning completed in %.2f seconds", end_time - start_time)
-
+    logger.info("Optuna tuning completed in %.2f seconds", time.time() - start_time)
     logger.info("Best Hyperparameters: %s", study.best_params)
     logger.info("Best Accuracy from Optuna: %f", study.best_value)
 
-    # Update the best model with the best hyperparameters
-    best_params = study.best_params
-    best_model.set_params(
-        learn_rate=best_params["learn_rate"],
-        max_depth=best_params["max_depth"],
-        ntrees=best_params["ntrees"],
-        min_rows=best_params["min_rows"],
-        sample_rate=best_params["sample_rate"],
-        col_sample_rate=best_params["col_sample_rate"],
-        stopping_rounds=best_params["stopping_rounds"]
-    )
+    best_model.set_params(**study.best_params)
     best_model.train(x=predictors, y=response, training_frame=hf_train)
 
     return best_model, study
@@ -203,15 +175,12 @@ def log_mlflow_metrics(best_model, study, psi_value, x_train, x_test, y_test):
     """Log metrics and parameters to MLflow."""
     mlflow.set_experiment("FashionMNIST_Tracking")
     with mlflow.start_run(run_name=datetime.datetime.now().strftime("%Y%m%d_%H%M%S")) as run:
-        run_id = run.info.run_id
-        logger.info("MLflow Run ID: %s", run_id)
+        logger.info("MLflow Run ID: %s", run.info.run_id)
 
-        # Log parameters and metrics
         mlflow.log_params(study.best_params)
         mlflow.log_metric("Best_Accuracy", study.best_value)
-        mlflow.log_metric("PSI_Value", psi_value)  # Added PSI value as a metric
+        mlflow.log_metric("PSI_Value", psi_value)
 
-        # Save the model as an artifact
         pickle_path = os.path.join(OUTPUT_DIR, "best_model.pkl")
         mlflow.log_artifact(pickle_path)
 
@@ -221,23 +190,18 @@ def main():
     hf_train, hf_test, predictors = convert_to_h2o_frame(x_train, y_train, x_test, y_test)
     response = 'label'
 
-    # Run H2O AutoML
     aml = run_h2o_automl(hf_train, predictors, response)
     save_automl_results(aml, OUTPUT_DIR)
     best_model = aml.leader
 
-    # Detect drift and calculate PSI value
     psi_value = detect_and_handle_drift(hf_train, hf_test, predictors, response, y_train, y_test)
 
-    # Run Optuna tuning and update the best model
     best_model, study = run_optuna_tuning(best_model, hf_train, hf_test, predictors, response, y_test)
     save_hyperparameter_logs(study, OUTPUT_DIR)
 
-    # Save the updated model after Optuna tuning
     save_model(best_model, MODELS_DIR)
     save_model_as_pickle(best_model, OUTPUT_DIR)
 
-    # Log metrics to MLflow, including PSI value
     log_mlflow_metrics(best_model, study, psi_value, x_train, x_test, y_test)
 
     try:
