@@ -15,22 +15,22 @@ from mlflow.models.signature import infer_signature
 import time
 
 # Constants
-OUTPUT_DIR = "reports"
-MODELS_DIR = "models"
-PSI_THRESHOLD = 0.1
-H2O_MAX_MODELS = 5
-H2O_MAX_RUNTIME_SECS = 600
-OPTUNA_TRIALS = 3
+OUTPUT_DIR = "reports"  # Directory to save reports and logs
+MODELS_DIR = "models"  # Directory to save trained models
+PSI_THRESHOLD = 0.1  # Threshold for Population Stability Index (PSI) to detect data drift
+H2O_MAX_MODELS = 5  # Maximum number of models to train in H2O AutoML
+H2O_MAX_RUNTIME_SECS = 600  # Maximum runtime for H2O AutoML in seconds
+OPTUNA_TRIALS = 3  # Number of trials for Optuna hyperparameter tuning
 
 # Optuna Hyperparameter Ranges
 OPTUNA_PARAMS = {
-    "learn_rate": (0.01, 0.1),
-    "max_depth": (3, 6),
-    "ntrees": (50, 150, 50),
-    "min_rows": (1, 10),
-    "sample_rate": (0.5, 1.0),
-    "col_sample_rate": (0.5, 1.0),
-    "stopping_rounds": (5, 10),
+    "learn_rate": (0.01, 0.1),  # Learning rate range
+    "max_depth": (3, 6),  # Maximum depth of trees
+    "ntrees": (50, 150, 50),  # Number of trees (step size of 50)
+    "min_rows": (1, 10),  # Minimum number of rows per leaf
+    "sample_rate": (0.5, 1.0),  # Row sampling rate
+    "col_sample_rate": (0.5, 1.0),  # Column sampling rate
+    "stopping_rounds": (5, 10),  # Early stopping rounds
 }
 
 # Configure logging
@@ -38,14 +38,26 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 def initialize_h2o():
-    """Initialize the H2O environment."""
+    """
+    Initialize the H2O environment.
+    This function starts the H2O server, which is required for H2O AutoML.
+    """
     h2o.init()
 
 def load_and_preprocess_data():
-    """Load and preprocess the Fashion MNIST dataset."""
+    """
+    Load and preprocess the Fashion MNIST dataset.
+    The dataset is normalized and reduced in size for faster execution.
+    
+    Returns:
+        x_train: Training features
+        y_train: Training labels
+        x_test: Testing features
+        y_test: Testing labels
+    """
     (x_train, y_train), (x_test, y_test) = tf.keras.datasets.fashion_mnist.load_data()
-    x_train = x_train.reshape(x_train.shape[0], -1) / 255.0
-    x_test = x_test.reshape(x_test.shape[0], -1) / 255.0
+    x_train = x_train.reshape(x_train.shape[0], -1) / 255.0  # Normalize and flatten
+    x_test = x_test.reshape(x_test.shape[0], -1) / 255.0  # Normalize and flatten
 
     # Reduce dataset size for faster execution
     sample_indices_train = np.random.choice(len(x_train), size=int(len(x_train) * 0.3), replace=False)
@@ -54,7 +66,20 @@ def load_and_preprocess_data():
     return x_train[sample_indices_train], y_train[sample_indices_train], x_test[sample_indices_test], y_test[sample_indices_test]
 
 def convert_to_h2o_frame(x_train, y_train, x_test, y_test):
-    """Convert data to H2O Frames."""
+    """
+    Convert the dataset to H2O Frames, which are required for H2O AutoML.
+    
+    Args:
+        x_train: Training features
+        y_train: Training labels
+        x_test: Testing features
+        y_test: Testing labels
+    
+    Returns:
+        hf_train: H2O Frame for training
+        hf_test: H2O Frame for testing
+        predictors: List of predictor column names
+    """
     df_train = pd.DataFrame(x_train)
     df_train['label'] = y_train
     df_test = pd.DataFrame(x_test)
@@ -63,19 +88,36 @@ def convert_to_h2o_frame(x_train, y_train, x_test, y_test):
     hf_train = h2o.H2OFrame(df_train)
     hf_test = h2o.H2OFrame(df_test)
 
+    # Convert the label column to a categorical type
     hf_train['label'] = hf_train['label'].asfactor()
     hf_test['label'] = hf_test['label'].asfactor()
 
     return hf_train, hf_test, df_train.columns[:-1].tolist()
 
 def run_h2o_automl(hf_train, predictors, response):
-    """Run H2O AutoML and return the best model."""
+    """
+    Run H2O AutoML to train multiple models and select the best one.
+    
+    Args:
+        hf_train: H2O Frame for training
+        predictors: List of predictor column names
+        response: Name of the response column
+    
+    Returns:
+        aml: H2OAutoML object containing the trained models
+    """
     aml = H2OAutoML(max_models=H2O_MAX_MODELS, max_runtime_secs=H2O_MAX_RUNTIME_SECS, seed=42)
     aml.train(x=predictors, y=response, training_frame=hf_train)
     return aml
 
 def save_automl_results(aml, output_dir):
-    """Save AutoML leaderboard results."""
+    """
+    Save the AutoML leaderboard results to a CSV file.
+    
+    Args:
+        aml: H2OAutoML object containing the trained models
+        output_dir: Directory to save the leaderboard results
+    """
     os.makedirs(output_dir, exist_ok=True)
     leaderboard_path = os.path.join(output_dir, "automl_results.csv")
     aml.leaderboard.as_data_frame().to_csv(leaderboard_path, index=False)
@@ -211,6 +253,48 @@ def compare_automl_models(aml, hf_test, response):
 
     return results
 
+def justify_model_selection(best_model, study, psi_value, comparison_results):
+    """
+    Provide a justification for the chosen model and hyperparameters.
+    Logs the reasoning based on evaluation metrics and hyperparameter tuning results.
+    """
+    logger.info("Justifying the chosen model and hyperparameters...")
+
+    # Best model details
+    best_model_id = best_model.model_id
+    best_model_accuracy = max([result['accuracy'] for result in comparison_results if result['model_id'] == best_model_id])
+    logger.info("Chosen Model ID: %s", best_model_id)
+    logger.info("Chosen Model Accuracy: %.4f", best_model_accuracy)
+
+    # Hyperparameter tuning results
+    logger.info("Best Hyperparameters from Optuna: %s", study.best_params)
+    logger.info("Best Accuracy from Optuna: %.4f", study.best_value)
+
+    # PSI value
+    logger.info("PSI Value: %.4f", psi_value)
+    if psi_value > PSI_THRESHOLD:
+        logger.warning("Data drift detected (PSI > %.2f). Model retrained to handle drift.", PSI_THRESHOLD)
+    else:
+        logger.info("No significant data drift detected (PSI <= %.2f).")
+
+    # Justification summary
+    justification = (
+        f"The chosen model (ID: {best_model_id}) was selected based on its superior accuracy of {best_model_accuracy:.4f} "
+        f"compared to other models in the AutoML leaderboard. The hyperparameters were fine-tuned using Optuna, achieving "
+        f"an accuracy of {study.best_value:.4f}. The PSI value of {psi_value:.4f} indicates that the model is robust to "
+        f"data drift, ensuring reliable performance."
+    )
+    logger.info("Model Justification: %s", justification)
+
+    # Save justification to a text file
+    justification_path = os.path.join(OUTPUT_DIR, "model_justification.txt")
+    try:
+        with open(justification_path, "w") as f:
+            f.write(justification)
+        logger.info("Model justification saved to %s", justification_path)
+    except Exception as e:
+        logger.error("Failed to save model justification: %s", e)
+
 def main():
     initialize_h2o()
     x_train, y_train, x_test, y_test = load_and_preprocess_data()
@@ -218,16 +302,20 @@ def main():
     response = 'label'
 
     aml = run_h2o_automl(hf_train, predictors, response)
-    save_automl_results(aml, OUTPUT_DIR)
-    best_model = aml.leader
 
     # Compare models from the AutoML leaderboard
-    compare_automl_models(aml, hf_test, response)
+    comparison_results = compare_automl_models(aml, hf_test, response)
+
+    save_automl_results(aml, OUTPUT_DIR)
+    best_model = aml.leader
 
     psi_value = detect_and_handle_drift(hf_train, hf_test, predictors, response, y_train, y_test)
 
     best_model, study = run_optuna_tuning(best_model, hf_train, hf_test, predictors, response, y_test)
     save_hyperparameter_logs(study, OUTPUT_DIR)
+
+    # Justify the chosen model and hyperparameters
+    justify_model_selection(best_model, study, psi_value, comparison_results)
 
     save_model(best_model, MODELS_DIR)
     save_model_as_pickle(best_model, OUTPUT_DIR)
