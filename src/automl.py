@@ -317,7 +317,7 @@ def justify_model_selection(best_model, study, psi_value):
 
     # Justification summary
     justification = (
-        f"The chosen model (ID: {best_model_id}) was selected based on its superior accuracy of {best_model_accuracy:.4f} "
+        f"The chosen model (ID: {best_model_id}) was selected based on its superior accuracy and F1-Score, "
         f"compared to other models in the AutoML leaderboard. The hyperparameters were fine-tuned using Optuna, achieving "
         f"an accuracy of {study.best_value:.4f}. The PSI value of {psi_value:.4f} indicates that the model is robust to "
         f"data drift, ensuring reliable performance."
@@ -347,10 +347,10 @@ def main():
     save_automl_results(aml, OUTPUT_DIR)
     best_model = aml.leader
 
-    psi_value = detect_and_handle_drift(hf_train, hf_test, predictors, response, y_train, y_test)
-
     best_model, study = run_optuna_tuning(best_model, hf_train, hf_test, predictors, response, y_test)
     save_hyperparameter_logs(study, OUTPUT_DIR)
+
+    psi_value = detect_and_handle_drift(hf_train, hf_test, predictors, response, y_train, y_test)
 
     # Justify the chosen model and hyperparameters
     justify_model_selection(best_model, study, psi_value)
