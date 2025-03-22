@@ -235,28 +235,56 @@ def log_mlflow_metrics(best_model, study, psi_value, x_train, x_test, y_test):
         mlflow.log_metric("Best_Accuracy", study.best_value)
         mlflow.log_metric("PSI_Value", psi_value)
 
-        pickle_path = os.path.join(OUTPUT_DIR, "best_model.pkl")
+        pickle_path = os.path.join(MODELS_DIR, "best_model.pkl")
         mlflow.log_artifact(pickle_path)
 
 def compare_automl_models(aml, hf_test, response):
-    """Compare multiple models from the AutoML leaderboard."""
+    """
+    Compare multiple models from the AutoML leaderboard using additional metrics.
+    
+    Args:
+        aml: H2OAutoML object containing the trained models
+        hf_test: H2O Frame for testing
+        response: Name of the response column
+    
+    Returns:
+        results: List of dictionaries containing model metrics
+    """
+    from sklearn.metrics import precision_score, recall_score, f1_score
+
     leaderboard = aml.leaderboard.as_data_frame()
     logger.info("Comparing models from the AutoML leaderboard...")
 
     results = []
     for model_id in leaderboard['model_id']:
         model = h2o.get_model(model_id)
-        predictions = model.predict(hf_test)
-        accuracy = accuracy_score(
-            hf_test[response].as_data_frame().values.flatten(),
-            predictions.as_data_frame()['predict'].values.flatten()
-        )
-        results.append({"model_id": model_id, "accuracy": accuracy})
-        logger.info("Model: %s, Accuracy: %.4f", model_id, accuracy)
+        predictions = model.predict(hf_test).as_data_frame()['predict'].astype(int)
+        true_labels = hf_test[response].as_data_frame().values.flatten()
 
-    # Sort results by accuracy
-    results = sorted(results, key=lambda x: x['accuracy'], reverse=True)
-    logger.info("Model comparison completed. Best model: %s with accuracy: %.4f", results[0]['model_id'], results[0]['accuracy'])
+        # Calculate metrics
+        accuracy = accuracy_score(true_labels, predictions)
+        precision = precision_score(true_labels, predictions, average='weighted', zero_division=0)
+        recall = recall_score(true_labels, predictions, average='weighted', zero_division=0)
+        f1 = f1_score(true_labels, predictions, average='weighted', zero_division=0)
+
+        results.append({
+            "model_id": model_id,
+            "accuracy": accuracy,
+            "precision": precision,
+            "recall": recall,
+            "f1_score": f1
+        })
+        logger.info(
+            "Model: %s, Accuracy: %.4f, Precision: %.4f, Recall: %.4f, F1-Score: %.4f",
+            model_id, accuracy, precision, recall, f1
+        )
+
+    # Sort results by F1-score (or any other metric you prefer)
+    results = sorted(results, key=lambda x: x['f1_score'], reverse=True)
+    logger.info(
+        "Model comparison completed. Best model: %s with F1-Score: %.4f",
+        results[0]['model_id'], results[0]['f1_score']
+    )
 
     # Save comparison results to a CSV file
     comparison_path = os.path.join(OUTPUT_DIR, "model_comparison.csv")
@@ -265,7 +293,7 @@ def compare_automl_models(aml, hf_test, response):
 
     return results
 
-def justify_model_selection(best_model, study, psi_value, comparison_results):
+def justify_model_selection(best_model, study, psi_value):
     """
     Provide a justification for the chosen model and hyperparameters.
     Logs the reasoning based on evaluation metrics and hyperparameter tuning results.
@@ -274,15 +302,7 @@ def justify_model_selection(best_model, study, psi_value, comparison_results):
 
     # Best model details
     best_model_id = best_model.model_id
-    filtered_results = [result for result in comparison_results if result['model_id'] == best_model_id]
-    
-    if not filtered_results:
-        logger.error("No results found for the best model ID: %s", best_model_id)
-        return
-    
-    best_model_accuracy = max(result['accuracy'] for result in filtered_results)
     logger.info("Chosen Model ID: %s", best_model_id)
-    logger.info("Chosen Model Accuracy: %.4f", best_model_accuracy)
 
     # Hyperparameter tuning results
     logger.info("Best Hyperparameters from Optuna: %s", study.best_params)
@@ -322,7 +342,7 @@ def main():
     aml = run_h2o_automl(hf_train, predictors, response)
 
     # Compare models from the AutoML leaderboard
-    comparison_results = compare_automl_models(aml, hf_test, response)
+    compare_automl_models(aml, hf_test, response)
 
     save_automl_results(aml, OUTPUT_DIR)
     best_model = aml.leader
@@ -333,7 +353,7 @@ def main():
     save_hyperparameter_logs(study, OUTPUT_DIR)
 
     # Justify the chosen model and hyperparameters
-    justify_model_selection(best_model, study, psi_value, comparison_results)
+    justify_model_selection(best_model, study, psi_value)
 
     save_model(best_model, MODELS_DIR)
     save_model_as_pickle(best_model, MODELS_DIR)
