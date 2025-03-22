@@ -139,9 +139,32 @@ def calculate_psi(expected, actual, buckets=10):
     psi_values = (expected_dist - actual_dist) * np.log((expected_dist + 1e-8) / (actual_dist + 1e-8))
     return np.sum(psi_values)
 
+# Define a threshold for PSI
+PSI_THRESHOLD = 0.1
+
 # Compute PSI to detect drift
 psi_value = calculate_psi(y_train, y_test)
 print(f"PSI Value: {psi_value}")
+
+if psi_value > PSI_THRESHOLD:
+    print("Drift detected. Retraining the model...")
+    
+    # Retrain the model using H2O AutoML
+    aml_retrain = H2OAutoML(max_models=5, max_runtime_secs=600, seed=42)
+    aml_retrain.train(x=predictors, y=response, training_frame=hf_train)
+    
+    # Get the best model from retraining
+    best_model_retrain = aml_retrain.leader
+    print(f"Retrained Best Model: {best_model_retrain}")
+    
+    # Save the retrained model
+    retrain_model_path = h2o.save_model(model=best_model_retrain, path="models", force=True)
+    print(f"Retrained H2O model saved to: {retrain_model_path}")
+    
+    # Update the final model
+    final_model = best_model_retrain
+else:
+    print("No significant drift detected. Skipping retraining.")
 
 # MLflow Tracking
 mlflow.set_experiment("FashionMNIST_Tracking")
