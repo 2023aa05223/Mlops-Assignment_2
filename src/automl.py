@@ -184,6 +184,33 @@ def log_mlflow_metrics(best_model, study, psi_value, x_train, x_test, y_test):
         pickle_path = os.path.join(OUTPUT_DIR, "best_model.pkl")
         mlflow.log_artifact(pickle_path)
 
+def compare_automl_models(aml, hf_test, response):
+    """Compare multiple models from the AutoML leaderboard."""
+    leaderboard = aml.leaderboard.as_data_frame()
+    logger.info("Comparing models from the AutoML leaderboard...")
+
+    results = []
+    for model_id in leaderboard['model_id']:
+        model = h2o.get_model(model_id)
+        predictions = model.predict(hf_test)
+        accuracy = accuracy_score(
+            hf_test[response].as_data_frame().values.flatten(),
+            predictions.as_data_frame()['predict'].values.flatten()
+        )
+        results.append({"model_id": model_id, "accuracy": accuracy})
+        logger.info("Model: %s, Accuracy: %.4f", model_id, accuracy)
+
+    # Sort results by accuracy
+    results = sorted(results, key=lambda x: x['accuracy'], reverse=True)
+    logger.info("Model comparison completed. Best model: %s with accuracy: %.4f", results[0]['model_id'], results[0]['accuracy'])
+
+    # Save comparison results to a CSV file
+    comparison_path = os.path.join(OUTPUT_DIR, "model_comparison.csv")
+    pd.DataFrame(results).to_csv(comparison_path, index=False)
+    logger.info("Model comparison results saved to %s", comparison_path)
+
+    return results
+
 def main():
     initialize_h2o()
     x_train, y_train, x_test, y_test = load_and_preprocess_data()
@@ -193,6 +220,9 @@ def main():
     aml = run_h2o_automl(hf_train, predictors, response)
     save_automl_results(aml, OUTPUT_DIR)
     best_model = aml.leader
+
+    # Compare models from the AutoML leaderboard
+    compare_automl_models(aml, hf_test, response)
 
     psi_value = detect_and_handle_drift(hf_train, hf_test, predictors, response, y_train, y_test)
 
