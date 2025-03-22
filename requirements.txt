@@ -1,8 +1,0 @@
-tensorflow
-pandas
-scikit-learn
-seaborn
-matplotlib
-sweetviz
-pandas-profiling
-dtale
