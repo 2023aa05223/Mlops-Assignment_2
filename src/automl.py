@@ -25,15 +25,19 @@ h2o.init()
 x_train = x_train.reshape(x_train.shape[0], -1) / 255.0
 x_test = x_test.reshape(x_test.shape[0], -1) / 255.0
 
+# Reduce dataset size for faster execution
+sample_indices_train = np.random.choice(len(x_train), size=int(len(x_train) * 0.3), replace=False)
+sample_indices_test = np.random.choice(len(x_test), size=int(len(x_test) * 0.3), replace=False)
+
+x_train = x_train[sample_indices_train]
+y_train = y_train[sample_indices_train]
+x_test = x_test[sample_indices_test]
+y_test = y_test[sample_indices_test]
+
 # Convert to Pandas DataFrame
 df_train = pd.DataFrame(x_train)
-df_test = pd.DataFrame(x_test)
-
-# Reduce dataset size for faster execution
-df_train = df_train.sample(frac=0.3, random_state=42)  # Use 30% of data
-df_test = df_test.sample(frac=0.3, random_state=42)  # Use 30% of test data
-
 df_train['label'] = y_train
+df_test = pd.DataFrame(x_test)
 df_test['label'] = y_test
 
 # Convert to H2O Frame
@@ -105,7 +109,7 @@ def objective(trial):
 
 # Run hyperparameter optimization with fewer trials
 study = optuna.create_study(direction='maximize')
-study.optimize(objective, n_trials=10)  # Reduced from 20 to 10
+study.optimize(objective, n_trials=5)
 
 # Save hyperparameter tuning logs
 with open("hyperparameter_tuning_logs.txt", "w") as f:
