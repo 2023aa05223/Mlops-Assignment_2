@@ -13,6 +13,7 @@ from h2o.automl import H2OAutoML
 from tensorflow.keras.datasets import fashion_mnist
 from sklearn.metrics import accuracy_score
 from mlflow.models.signature import infer_signature
+import time
 
 # Constants
 OUTPUT_DIR = "reports"
@@ -20,15 +21,15 @@ MODELS_DIR = "models"
 PSI_THRESHOLD = 0.1
 H2O_MAX_MODELS = 5
 H2O_MAX_RUNTIME_SECS = 600
-OPTUNA_TRIALS = 5
+OPTUNA_TRIALS = 3  # Reduce the number of trials for faster execution
 
 # Optuna Hyperparameter Ranges
-OPTUNA_LEARNING_RATE_MIN = 0.001
+OPTUNA_LEARNING_RATE_MIN = 0.01
 OPTUNA_LEARNING_RATE_MAX = 0.1
 OPTUNA_MAX_DEPTH_MIN = 3
-OPTUNA_MAX_DEPTH_MAX = 10
+OPTUNA_MAX_DEPTH_MAX = 6
 OPTUNA_NTREES_MIN = 50
-OPTUNA_NTREES_MAX = 300
+OPTUNA_NTREES_MAX = 150
 OPTUNA_NTREES_STEP = 50
 OPTUNA_MIN_ROWS_MIN = 1
 OPTUNA_MIN_ROWS_MAX = 10
@@ -37,7 +38,7 @@ OPTUNA_SAMPLE_RATE_MAX = 1.0
 OPTUNA_COL_SAMPLE_RATE_MIN = 0.5
 OPTUNA_COL_SAMPLE_RATE_MAX = 1.0
 OPTUNA_STOPPING_ROUNDS_MIN = 5
-OPTUNA_STOPPING_ROUNDS_MAX = 20
+OPTUNA_STOPPING_ROUNDS_MAX = 10
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -142,6 +143,8 @@ def detect_and_handle_drift(hf_train, hf_test, predictors, response, y_train, y_
 
 def run_optuna_tuning(best_model, hf_train, hf_test, predictors, response, y_test):
     """Run Optuna hyperparameter tuning and update the best model."""
+    start_time = time.time()  # Start timer
+
     def objective(trial):
         learning_rate = trial.suggest_float("learn_rate", OPTUNA_LEARNING_RATE_MIN, OPTUNA_LEARNING_RATE_MAX, log=True)
         max_depth = trial.suggest_int("max_depth", OPTUNA_MAX_DEPTH_MIN, OPTUNA_MAX_DEPTH_MAX)
@@ -162,7 +165,10 @@ def run_optuna_tuning(best_model, hf_train, hf_test, predictors, response, y_tes
         return accuracy_score(y_test, preds)
 
     study = optuna.create_study(direction='maximize')
-    study.optimize(objective, n_trials=OPTUNA_TRIALS)
+    study.optimize(objective, n_trials=OPTUNA_TRIALS, n_jobs=2)
+
+    end_time = time.time()  # End timer
+    logger.info("Optuna tuning completed in %.2f seconds", end_time - start_time)
 
     logger.info("Best Hyperparameters: %s", study.best_params)
     logger.info("Best Accuracy from Optuna: %f", study.best_value)
