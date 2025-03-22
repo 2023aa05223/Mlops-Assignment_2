@@ -132,12 +132,24 @@ def save_model(model, models_dir):
     except Exception as e:
         logger.error("Failed to save H2O model: %s", e)
 
-def save_model_as_pickle(model, output_dir):
-    """Save the best model as a pickle file."""
-    pickle_path = os.path.join(output_dir, "best_model.pkl")
+def save_model_as_pickle(model, models_dir):
+    """
+    Save the best model as a pickle file by saving its path and metadata.
+    
+    Args:
+        model: H2O model to save
+        models_dir: Directory to save the pickle file
+    """
+    os.makedirs(models_dir, exist_ok=True)
+    pickle_path = os.path.join(models_dir, "best_model.pkl")
     try:
+        # Save the model using H2O's save_model method
+        model_path = h2o.save_model(model=model, path=models_dir, force=True)
+        
+        # Save the model path and metadata in the pickle file
         with open(pickle_path, "wb") as f:
-            pickle.dump(model, f)
+            pickle.dump({"model_path": model_path}, f)
+        
         logger.info("Best model saved as pickle to: %s", pickle_path)
     except Exception as e:
         logger.error("Failed to save model as pickle: %s", e)
@@ -318,7 +330,7 @@ def main():
     justify_model_selection(best_model, study, psi_value, comparison_results)
 
     save_model(best_model, MODELS_DIR)
-    save_model_as_pickle(best_model, OUTPUT_DIR)
+    save_model_as_pickle(best_model, MODELS_DIR)
 
     log_mlflow_metrics(best_model, study, psi_value, x_train, x_test, y_test)
 
