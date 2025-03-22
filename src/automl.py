@@ -84,14 +84,13 @@ def objective(trial):
     sample_rate = trial.suggest_float("sample_rate", 0.5, 1.0)
     col_sample_rate = trial.suggest_float("col_sample_rate", 0.5, 1.0)
     stopping_rounds = trial.suggest_int("stopping_rounds", 5, 20)
-    balance_classes = trial.suggest_categorical("balance_classes", [True, False])
     
     # Clone best model and apply new hyperparameters
     model = best_model
     model.set_params(
         learn_rate=learning_rate, max_depth=max_depth, ntrees=ntrees,
         min_rows=min_rows, sample_rate=sample_rate, col_sample_rate=col_sample_rate,
-        stopping_rounds=stopping_rounds, balance_classes=balance_classes
+        stopping_rounds=stopping_rounds
     )
     
     # Train model
