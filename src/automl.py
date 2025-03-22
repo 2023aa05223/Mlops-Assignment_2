@@ -27,13 +27,14 @@ x_test = x_test.reshape(x_test.shape[0], -1) / 255.0
 
 # Convert to Pandas DataFrame
 df_train = pd.DataFrame(x_train)
-df_train['label'] = y_train
 df_test = pd.DataFrame(x_test)
-df_test['label'] = y_test
 
 # Reduce dataset size for faster execution
 df_train = df_train.sample(frac=0.3, random_state=42)  # Use 30% of data
 df_test = df_test.sample(frac=0.3, random_state=42)  # Use 30% of test data
+
+df_train['label'] = y_train
+df_test['label'] = y_test
 
 # Convert to H2O Frame
 hf_train = h2o.H2OFrame(df_train)
