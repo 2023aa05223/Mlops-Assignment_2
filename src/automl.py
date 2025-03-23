@@ -1,7 +1,6 @@
 import logging
 import datetime
 import os
-import pickle
 import h2o
 import optuna
 import numpy as np
@@ -213,8 +212,8 @@ def log_mlflow_metrics(best_model, study, psi_value, x_train, x_test, y_test):
         mlflow.log_metric("Best_Accuracy", study.best_value)
         mlflow.log_metric("PSI_Value", psi_value)
 
-        pickle_path = os.path.join(MODELS_DIR, "best_model.pkl")
-        mlflow.log_artifact(pickle_path)
+        model_path = os.path.join(MODELS_DIR, best_model.model_id)
+        mlflow.log_artifact(model_path)
 
 def compare_automl_models(aml, hf_test, response):
     """
