@@ -132,24 +132,6 @@ def save_model(model, models_dir):
     except Exception as e:
         logger.error("Failed to save H2O model: %s", e)
 
-def save_model_as_pickle(model, models_dir):
-    """
-    Save the best model as a pickle file by saving its path and metadata.
-
-    Args:
-        model: H2O model to save
-        models_dir: Directory to save the pickle file
-    """
-    os.makedirs(models_dir, exist_ok=True)
-    pickle_path = os.path.join(models_dir, "best_model.pkl")
-    try:
-        with open(pickle_path, "wb") as f:
-            pickle.dump(model, f)
-
-        logger.info("Best model saved as pickle to: %s", pickle_path)
-    except Exception as e:
-        logger.error("Failed to save model as pickle: %s", e)
-
 def calculate_psi(expected, actual, buckets=10):
     """Calculate Population Stability Index (PSI) to detect data drift."""
     def get_bucket_values(data, buckets):
@@ -289,7 +271,7 @@ def compare_automl_models(aml, hf_test, response):
 
     return results
 
-def justify_model_selection(best_model, study, psi_value):
+def justify_model_selection(best_model, study):
     """
     Provide a justification for the chosen model and hyperparameters.
     Logs the reasoning based on evaluation metrics and hyperparameter tuning results.
@@ -304,19 +286,11 @@ def justify_model_selection(best_model, study, psi_value):
     logger.info("Best Hyperparameters from Optuna: %s", study.best_params)
     logger.info("Best Accuracy from Optuna: %.4f", study.best_value)
 
-    # PSI value
-    logger.info("PSI Value: %.4f", psi_value)
-    if psi_value > PSI_THRESHOLD:
-        logger.warning("Data drift detected (PSI > %.2f). Model retrained to handle drift.", PSI_THRESHOLD)
-    else:
-        logger.info("No significant data drift detected (PSI <= %.2f).")
-
     # Justification summary
     justification = (
         f"The chosen model (ID: {best_model_id}) was selected based on its superior accuracy and F1-Score, "
         f"compared to other models in the AutoML leaderboard. The hyperparameters were fine-tuned using Optuna, achieving "
-        f"an accuracy of {study.best_value:.4f}. The PSI value of {psi_value:.4f} indicates that the model is robust to "
-        f"data drift, ensuring reliable performance."
+        f"an accuracy of {study.best_value:.4f}."
     )
     logger.info("Model Justification: %s", justification)
 
@@ -346,13 +320,12 @@ def main():
     best_model, study = run_optuna_tuning(best_model, hf_train, hf_test, predictors, response, y_test)
     save_hyperparameter_logs(study, OUTPUT_DIR)
 
-    psi_value = detect_and_handle_drift(hf_train, hf_test, predictors, response, y_train, y_test)
-
     # Justify the chosen model and hyperparameters
-    justify_model_selection(best_model, study, psi_value)
+    justify_model_selection(best_model, study)
 
     save_model(best_model, MODELS_DIR)
-    save_model_as_pickle(best_model, MODELS_DIR)
+
+    psi_value = detect_and_handle_drift(hf_train, hf_test, predictors, response, y_train, y_test)
 
     log_mlflow_metrics(best_model, study, psi_value, x_train, x_test, y_test)
 
